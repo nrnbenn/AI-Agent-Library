@@ -17,6 +17,8 @@ The library provides a simple interface for:
 pip install ollama pydantic
 ```
 
+Copy the agent_library.py file into your project.
+
 You will also need an Ollama server with a suitable model installed.
 
 ---
@@ -139,7 +141,7 @@ result = ai.ask(
 
 The returned value is a validated `MathsOutput` instance.
 
-If the model produces invalid output, the library automatically makes a second request using Ollama's structured-output format to correct it.
+If the model produces invalid output, the library automatically makes a second request using Ollama's structured-output format to correct it, with no chance of error.
 
 The agent can therefore use tools normally before producing its final structured response.
 
@@ -221,21 +223,6 @@ This library is intended as a **small foundation for experimenting with AI agent
 * Structured AI workflows
 
 It deliberately keeps the agent loop simple rather than hiding it behind a large framework.
-
----
-
-## Project Structure
-
-A typical project might look like:
-
-```text
-.
-├── agent_library.py
-├── example.py
-└── README.md
-```
-
-`example.py` contains a complete working example of registering tools, creating an agent and using structured output.
 
 ---
 
