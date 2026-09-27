@@ -1,7 +1,7 @@
 from ollama import Client
 from typing import Callable, Any, get_type_hints
 import inspect
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, ValidationError, create_model
 
 TOOLS: dict[str, dict] = {}
 
@@ -62,13 +62,9 @@ class Agent:
                     "function": {
                         "name": tool_data["name"],
                         "description": tool_data["description"],
-                        "parameters": {
-                            "type": "object",
-                            "properties": parameters,
-                            "required": list(parameters.keys()),
-                        },
+                        "parameters": parameters,
                     },
-                }
+                },
             )
         return ollama_tools
 
@@ -76,21 +72,20 @@ class Agent:
     def _get_paramaters(self, function: Callable) -> dict:
         signature = inspect.signature(function)
         type_hints = get_type_hints(function)
-        parameters = {}
+
+        fields = {}
+
         for name, parameter in signature.parameters.items():
             annotation = type_hints.get(name, str)
-            parameters[name] = {"type": self._python_type_to_json(annotation)}
-        return parameters
 
-    @staticmethod
-    def _python_type_to_json(annotation):
-        if annotation is int:
-            return "integer"
-        if annotation is float:
-            return "number"
-        if annotation is bool:
-            return "boolean"
-        return "string"
+            if parameter.default is inspect.Parameter.empty:
+                fields[name] = (annotation, ...)
+            else:
+                fields[name] = (annotation, parameter.default)
+
+        model = create_model(f"{function.__name__}Parameters", **fields)
+
+        return model.model_json_schema()
 
     def execute_tool(self, name: str, arguments: dict) -> Any:
         # Permission check
